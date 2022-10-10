@@ -1,3 +1,4 @@
+import struct
 import ctypes
 import pyttsx3
 import requests
@@ -7,13 +8,22 @@ import os
 
 class heyArts:
     def __init__(self):
-        self.imagepath = os.path.abspath("wallpaper.jpg")
+        self.path = os.getcwd()+"\\wallapaper.png"
+        print(self.path)
         self.imageurl = "https://raw.githubusercontent.com/siddhant385/Python-Games/main/resources/wallpaper.txt"
     
-    def wallpaper(self):
-        #print(self.imagepath)
-        SPI_SETDESKWALLPAPER = 20 
-        ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, self.imagepath , 2)
+    def is_64bit_windows(self):
+        """Check if 64 bit Windows OS"""
+        return struct.calcsize('P') * 8 == 64
+
+    def changeBG(self):
+        """Change background depending on bit size"""
+        if self.is_64bit_windows():
+            ctypes.windll.user32.SystemParametersInfoW(20, 0, self.path, 3)
+        else:
+            ctypes.windll.user32.SystemParametersInfoA(20, 0, self.path, 3)
+
+
 
     def geturl(self):
         try:
@@ -25,29 +35,33 @@ class heyArts:
     def speak(self,audio):
         engine = pyttsx3.init()
         voices = engine.getProperty('voices')
-        engine.setProperty('voice', voices[0].id)
+        engine.setProperty('voice', voices[1].id)
         engine.setProperty('rate',100)
         engine.say(audio) 
         engine.runAndWait()
 
     def downloadwallapaper(self,url):
         response = requests.get(url)
+        print(response.status_code)
         if response.status_code == 200:
-            with open("wallapaper.jpg", 'wb') as f:
+            with open("wallapaper.png", 'wb') as f:
                 f.write(response.content)
-        f.close()
+                f.close()
+        else:
+            print("Error")
 
     def main(self):
         try:
-            if not self.geturl().startswith("http"):
-                url = "https://images.pexels.com/photos/1766838/pexels-photo-1766838.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+            if self.geturl().startswith("http"):
+                url = "https://raw.githubusercontent.com/siddhant385/Python-Games/main/resources/wallpaper.png"
             else:
                 url = self.geturl()
+                print(url)
             self.downloadwallapaper(url)
             self.speak("downloaded wallpaper")
-            #print("downloaded wallpaper")
-            self.wallpaper()
-            #print("wallpaper changed")
+            print("downloaded wallpaper")
+            self.changeBG()
+            print("wallpaper changed")
             self.speak("wallpaper changed")
         except Exception as e:
             print(e)
@@ -55,7 +69,9 @@ class heyArts:
 
 s = heyArts()
 s.main()
-while True:
+count = 0
+while count < 10:
     s.speak("Hey Arts")
     #print("hey arts")
-    time.sleep(5)
+    time.sleep(3)
+    count += 1
